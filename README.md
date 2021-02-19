@@ -1,13 +1,5 @@
 <h1 align="center"> 利用Github Actions编译REC</h1>
 
-<div align="center">
-	<a href="../..">
-		<img src="demo.jpg" title="Demo" />
-	</a>
-</div>
-
----
-
 <p align="center">
 	A Github Action to build Recovery
 </p>
@@ -19,13 +11,6 @@
 </div>
 
 <br />
-
-由于编译时间较长，建议把<code>[.github/workflows/actions_recovery.yml](.github/workflows/actions_recovery.yml)</code>末尾上传处的`${{ secrets.GITHUB_TOKEN }}`改成自己的[Personal Access Token](https://github.com/settings/tokens)
-
-注意保护自己的Personal Access Token，将它放入仓库[Settings](../../settings)里的[Secrets](../../settings/secrets)里后用`${{ secrets.YOUR_TOKEN_NAME }}`来替换`${{ secrets.GITHUB_TOKEN }}`
-
-比如我的secret名字叫做work.则使用`${{ secrets.work }}`
-
 ## 配置
 
 配置文件是[config.json](config.json)
@@ -49,7 +34,7 @@
 
 ## 开始
 
-Fork此仓库后，点击右上角Star就会开始
+点击右上角Star就会开始
 
 ## 编译结果
-可以在[Release](../../releases)下载
+可以在对应workflow的UploadREC过程中找到wetransfer链接下载
