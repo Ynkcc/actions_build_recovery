@@ -17,7 +17,10 @@ jobs:
       run: |
         docker rmi `docker images -q`
         sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/sudo apt/sources.list.d
-        sudo apt -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php*
+        sudo apt-get autoremove php8*
+        sudo find /etc -name "*php*" |sudo xargs rm -rf
+        sudo apt purge `dpkg -l | grep php| awk '{print $2}' |tr "\n" " "`
+        sudo apt -y purge azure-cli ghc-8.10.2 ghc-8.6.5 ghc-8.8.4 llvm-10-dev llvm-10-runtime llvm-10-tools llvm-10 llvm-9-dev llvm-9-runtime llvm-9-tools llvm-9 llvm-8-dev llvm-8-runtime llvm-8 google-chrome-stable google-cloud-sdk dotnet-apphost-pack-3.1 dotnet-apphost-pack-5.0 dotnet-host dotnet-hostfxr-3.1 dotnet-hostfxr-5.0 dotnet-runtime-3.1 dotnet-runtime-5.0 dotnet-runtime-deps-3.1 dotnet-runtime-deps-5.0 dotnet-sdk-3.1 dotnet-sdk-5.0 dotnet-targeting-pack-3.1 dotnet-targeting-pack-5.0 mysql-client-8.0 mysql-client-core-8.0 mysql-common mysql-server mysql-server-8.0 mysql-server-core-8.0 hhvm firefox powershell
         sudo apt update
         sudo apt -y autoremove --purge
         sudo apt clean
@@ -25,11 +28,16 @@ jobs:
     - name: Update packages
       run: |
         sudo apt update
-        sudo apt full-upgrade
+        sudo apt upgrade
         
     - name: Install required packages
       run: sudo apt install git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc unzip jq
-      
+    
+    - name: Use Python2 to avoid errors
+      run: |
+        sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 150
+        sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 100
+  
     - name: Get variables
       run: |
         echo "::set-output name=twrp_url::$(jq -r '.twrp_url' config.json)"
@@ -55,8 +63,9 @@ jobs:
         curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
         chmod a+x ~/bin/repo
         
-    - name: Initialize Repair Manifest
-      run: git clone https://github.com/TeamWin/buildtree_manifests.git repair/
+ # - name: Initialize Repair Manifest
+ 
+ #  run: git clone https://github.com/TeamWin/buildtree_manifests.git repair/
       
     - name: Initialize a Repo client
       run: |
@@ -91,7 +100,7 @@ jobs:
       run: |
         PATH=~/bin:$PATH
         cd workspace
-        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+        repo sync -c -j$(nproc --all)
         ls -al
         
     - name: Fix cannot locate product
@@ -113,11 +122,8 @@ jobs:
         mka recoveryimage -j$(nproc --all)
         
     - name: Upload REC
-      uses: softprops/action-gh-release@v1
-      with:
-        files: workspace/out/target/product/${{ steps.var.outputs.device_code }}/recovery.img
-        name: ${{ steps.var.outputs.date }} ${{ steps.var.outputs.device_code }} by ${{ steps.var.outputs.git_username }}
-        tag_name: ${{ github.run_id }}
-        body: Android Third-Party Recovery built by ${{ steps.var.outputs.git_username }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd workspace/out/target/product/${{ steps.var.outputs.device_code }}/
+        curl -sL https://git.io/file-transfer | sh
+        ./transfer wet recovery.img
+        
